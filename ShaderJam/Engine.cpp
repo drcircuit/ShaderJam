@@ -1,7 +1,12 @@
 #include "Engine.h"
 
 bool Engine::Initialize(HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height) {
-	return this->rWindow.Initialize(this, hInstance, window_title, window_class, width, height);
+	if (!this->rWindow.Initialize(this, hInstance, window_title, window_class, width, height)) {
+		return false;	
+	};
+	if (!gfx.Initialize(this->rWindow.GetHWND(), width, height)) {
+		return false;
+	}
 }
 
 bool Engine::ProcessMessage() {
@@ -26,4 +31,7 @@ void Engine::Update() {
 			OutputDebugStringA(msg.c_str());
 		}
 	}
+}
+void Engine::Draw() {
+	gfx.Render();
 }

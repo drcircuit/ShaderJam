@@ -21,9 +21,11 @@ bool RenderWindow::Initialize(WindowContainer *pWindowContainer, HINSTANCE hInst
 	ShowWindow(this->handle, SW_SHOW);
 	SetForegroundWindow(this->handle);
 	SetFocus(this->handle);
-	return false;
+	return true;
 }
-
+HWND RenderWindow::GetHWND() const {
+	return this->handle;
+}
 RenderWindow::~RenderWindow()
 {
 	if (this->handle != NULL) {
@@ -85,7 +87,7 @@ void RenderWindow::RegisterWindowClass() {
 bool RenderWindow::ProcessMessage() {
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
-	if (PeekMessage(&msg, this->handle, 0, 0, PM_REMOVE)) {
+	while (PeekMessage(&msg, this->handle, 0, 0, PM_REMOVE)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}

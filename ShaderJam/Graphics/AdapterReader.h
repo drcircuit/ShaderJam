@@ -13,12 +13,14 @@ public:
 	AdapterData(IDXGIAdapter* pAdapter);
 	IDXGIAdapter* pAdapter;
 	DXGI_ADAPTER_DESC description;
+
 };
 
 class AdapterReader {
 
 public:
-	static std::vector<AdapterData> GetAdapterData();
+	static std::vector<AdapterData> GetAdapters();
+	static AdapterData GetBestAdapter();
 private:
 	static std::vector<AdapterData>adapters;
 };

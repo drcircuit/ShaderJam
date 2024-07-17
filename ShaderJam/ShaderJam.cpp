@@ -14,6 +14,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	eng.Initialize(hInstance, "ShaderJam", "ShaderJamWC", cfg.width, cfg.height);
 	while (eng.ProcessMessage()) {
 		eng.Update();
+		eng.Draw();
 	}
 	return 0;
 }

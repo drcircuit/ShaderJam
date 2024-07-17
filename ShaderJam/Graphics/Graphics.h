@@ -1,12 +1,10 @@
 #pragma once
-#include <d3d11.h>
-#include <wrl/client.h>
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "DirectXTK.lib")
+#include "AdapterReader.h"
 
 class Graphics {
 public:
 	bool Initialize(HWND hwnd, int width, int height);
+	void Render();
 private:
 	bool InitializeDirectX(HWND hwnd, int width, int height);
 
