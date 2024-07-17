@@ -1,0 +1,1 @@
+# Add x64 and x86 folders here, with a Debug and Release folder in each
