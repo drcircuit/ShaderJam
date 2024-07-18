@@ -1,6 +1,8 @@
 #pragma once
 #include "AdapterReader.h"
 #include "Shaders.h"
+#include "Vertex.h"
+
 class Graphics {
 public:
 	bool Initialize(HWND hwnd, int width, int height, std::wstring vertexShaderFile, std::wstring effectShaderFile, std::wstring postShaderFile);
@@ -8,6 +10,7 @@ public:
 private:
 	bool InitializeDirectX(HWND hwnd, int width, int height);
 	bool InitializeShaders(std::wstring vertexShaderFile, std::wstring effectShaderFile, std::wstring postShaderFile);
+	bool InitializeScene();
 	// Yay smart pointers!
 	Microsoft::WRL::ComPtr<ID3D11Device> device;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
@@ -16,4 +19,6 @@ private:
 	VertexShader vertexShader;
 	PixelShader effectShader;
 	PixelShader postShader;
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 };
