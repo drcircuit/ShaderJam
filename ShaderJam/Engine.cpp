@@ -1,10 +1,10 @@
 #include "Engine.h"
 
-bool Engine::Initialize(HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height) {
+bool Engine::Initialize(HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height, ShaderFiles shaders) {
 	if (!this->rWindow.Initialize(this, hInstance, window_title, window_class, width, height)) {
 		return false;	
 	};
-	if (!gfx.Initialize(this->rWindow.GetHWND(), width, height)) {
+	if (!gfx.Initialize(this->rWindow.GetHWND(), width, height, shaders.vertexShaderFile, shaders.effectShaderFile, shaders.postShaderFile)) {
 		return false;
 	}
 }
@@ -28,7 +28,7 @@ void Engine::Update() {
 			std::string msg = "RAW: ";
 			msg += "X: " + std::to_string(me.GetX());
 			msg += ", Y: " + std::to_string(me.GetY())+"\n";
-			OutputDebugStringA(msg.c_str());
+			//OutputDebugStringA(msg.c_str());
 		}
 	}
 }

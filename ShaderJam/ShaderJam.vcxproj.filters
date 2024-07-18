@@ -31,6 +31,24 @@
     <Filter Include="Source Files\Graphics">
       <UniqueIdentifier>{aff8b46e-6d32-456f-a9ce-5eb5e1c7f5b2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Audio">
+      <UniqueIdentifier>{c60d4952-42ee-4570-bb73-5d84a2791a00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Audio">
+      <UniqueIdentifier>{b4afaeba-0414-44e7-9db6-5e5beb2732b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Graphics\Textures">
+      <UniqueIdentifier>{aa33d5c7-63a5-4f90-9ee1-b83bcd45d2ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics\Textures">
+      <UniqueIdentifier>{c5bbf25f-92fc-42ea-91e0-32e69728dc66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Textures">
+      <UniqueIdentifier>{0a28e993-d41a-4124-b10a-111fcfd65e97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Audio">
+      <UniqueIdentifier>{89986928-3f0a-4871-82d0-71e5bd05e23d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ShaderJam.cpp">
@@ -72,6 +90,9 @@
     <ClCompile Include="Graphics\AdapterReader.cpp">
       <Filter>Header Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Shaders.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="StringConverter.h">
@@ -110,6 +131,12 @@
     <ClInclude Include="Graphics\AdapterReader.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\Vertex.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Shaders.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="settings.cfg">
@@ -119,6 +146,12 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertex.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="effect.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="post.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>

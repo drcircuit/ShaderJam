@@ -11,7 +11,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	Cfg::ParseConfig();
 	Config cfg = Cfg::GetCfg();
 	Engine eng;
-	eng.Initialize(hInstance, "ShaderJam", "ShaderJamWC", cfg.width, cfg.height);
+	Engine::ShaderFiles shaders;
+	shaders.vertexShaderFile = StringConverter::StringToWide(cfg.vertexShader);
+	shaders.effectShaderFile = StringConverter::StringToWide(cfg.effectShader);
+	shaders.postShaderFile = StringConverter::StringToWide(cfg.postShader);
+	
+	if(eng.Initialize(hInstance, "ShaderJam", "ShaderJamWC", cfg.width, cfg.height, shaders))
 	while (eng.ProcessMessage()) {
 		eng.Update();
 		eng.Draw();

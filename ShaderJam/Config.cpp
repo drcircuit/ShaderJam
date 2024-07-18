@@ -46,12 +46,21 @@ void Cfg::ParseConfig() {
 					if (num > 0) Cfg::cfg.height = num;
 					break;
 				case vertexShader:
+					// remove quotes
+					value.erase(0, 1);
+					value.erase(value.size() - 1, 1);
 					Cfg::cfg.vertexShader = value;
 					break;
 				case effectShader:
+					// remove quotes
+					value.erase(0, 1);
+					value.erase(value.size() - 1, 1);
 					Cfg::cfg.effectShader = value;
 					break;
 				case postShader:
+					// remove quotes
+					value.erase(0, 1);
+					value.erase(value.size() - 1, 1);
 					Cfg::cfg.postShader = value;
 					break;
 				case windowType:

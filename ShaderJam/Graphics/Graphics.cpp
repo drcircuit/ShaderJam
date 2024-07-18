@@ -1,6 +1,8 @@
 #include "Graphics.h"
-bool Graphics::Initialize(HWND hwnd, int width, int height) {
+bool Graphics::Initialize(HWND hwnd, int width, int height, std::wstring vertexShaderFile, std::wstring effectShaderFile, std::wstring postShaderFile) {
 	if (!InitializeDirectX(hwnd, width, height))
+		return false;
+	if(!InitializeShaders(vertexShaderFile, effectShaderFile, postShaderFile))
 		return false;
 	return true;
 }
@@ -72,5 +74,37 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height) {
 		return false;
 	}
 	this->context->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), NULL);
+
+	D3D11_VIEWPORT viewport;
+	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = width;
+	viewport.Height = height;
+
+	this->context->RSSetViewports(1, &viewport);
+	return true;
+}
+
+bool Graphics::InitializeShaders(std::wstring vertexShaderFile, std::wstring effectShaderFile, std::wstring postShaderFile)
+{
+	D3D11_INPUT_ELEMENT_DESC layout[] = {
+		{
+			"POSITION", // The name of the element
+			0, // The index of the element
+			DXGI_FORMAT_R32G32_FLOAT, // The format of the element
+			0, // The input slot
+			0, // The byte offset
+			D3D11_INPUT_PER_VERTEX_DATA, // The input slot class
+			0 // The instance data step rate
+		}
+	};
+	if(!this->vertexShader.Initialize(this->device,vertexShaderFile, layout, ARRAYSIZE(layout)))
+		return false;
+	if(!this->effectShader.Initialize(this->device, effectShaderFile))
+		return false;
+	if(!this->postShader.Initialize(this->device, postShaderFile))
+		return false;
+	
 	return true;
 }
