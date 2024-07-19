@@ -19,10 +19,21 @@ private:
 
 class PixelShader {
 public:
-	bool Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, std::wstring shaderpath);
+	struct EffectData {
+		float time;
+		float Padding[3];
+	};
+	bool Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, Microsoft::WRL::ComPtr<ID3D11DeviceContext>&context, std::wstring shaderpath);
 	ID3D11PixelShader* GetShader();
+	ID3D11Buffer* GetDataBuffer();
 	ID3D10Blob* GetBuffer();
+	EffectData* GetDataPointer();
+	void SetTextureResourceView(Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv);
+	void SetTime(float time);
 private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> shader;
 	Microsoft::WRL::ComPtr<ID3D10Blob> shader_buffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> dataBuffer;
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
+	EffectData data;
 };;
