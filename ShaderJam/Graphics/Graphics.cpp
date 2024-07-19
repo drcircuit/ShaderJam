@@ -2,31 +2,61 @@
 bool Graphics::Initialize(HWND hwnd, int width, int height, std::wstring vertexShaderFile, std::wstring effectShaderFile, std::wstring postShaderFile) {
 	if (!InitializeDirectX(hwnd, width, height))
 		return false;
+	if (!InitializeEffectTexture(width, height))
+		return false;
 	if(!InitializeShaders(vertexShaderFile, effectShaderFile, postShaderFile))
 		return false;
-	if(!InitializeScene())
+	if(!InitializeScene(width, height))
+		return false;
+	timer.Initialize();
+	return true;
+}
+
+bool Graphics::Recompile(std::wstring vertexShaderFile, std::wstring effectShaderFile, std::wstring postShaderFile)
+{
+	if(!InitializeShaders(vertexShaderFile, effectShaderFile, postShaderFile))
 		return false;
 	return true;
 }
 
 void Graphics::Render()
 {
+	float time = timer.Ellapsed();
 	float color[] = { 0.0f, 0.5f, 0.8f, 1.0f };
-	this->context->ClearRenderTargetView(this->renderTargetView.Get(), color);
 
+	// First pass: Render to offscreen texture
+	this->context->OMSetRenderTargets(1, this->effectRenderTargetView.GetAddressOf(), nullptr);
+	this->context->ClearRenderTargetView(this->effectRenderTargetView.Get(), color);
+	this->effectShader.SetTime(time);
+	PixelShader::EffectData* data = this->effectShader.GetDataPointer();
+	ID3D11Buffer* buffer = this->effectShader.GetDataBuffer();
+	this->context->UpdateSubresource(buffer, 0, NULL, data, 0, 0);
+	this->context->PSSetConstantBuffers(0, 1, &buffer);
+	// Set shaders and draw
 	this->context->IASetInputLayout(this->vertexShader.GetInputLayout());
 	this->context->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-
 	this->context->VSSetShader(this->vertexShader.GetShader(), NULL, 0);
 	this->context->PSSetShader(this->effectShader.GetShader(), NULL, 0);
-
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	this->context->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), &stride, &offset);
-
 	this->context->Draw(4, 0);
 
-	this->swapchain->Present(1, NULL);
+	// Second pass: Render to the back buffer
+	this->context->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), nullptr);
+	this->context->ClearRenderTargetView(this->renderTargetView.Get(), color);
+
+
+	this->context->PSSetShaderResources(0, 1, this->effectShaderResourceView.GetAddressOf());
+	this->postShader.SetTime(time);
+	buffer = this->postShader.GetDataBuffer();
+	this->context->UpdateSubresource(buffer, 0, NULL, data, 0, 0);
+	this->context->PSSetConstantBuffers(0, 1, &buffer);
+
+	this->context->PSSetShader(this->postShader.GetShader(), NULL, 0);
+	this->context->Draw(4, 0); // Assuming same vertex setup for full screen quad
+
+	this->swapchain->Present(1, 0);
 }
 
 bool Graphics::InitializeDirectX(HWND hwnd, int width, int height) {
@@ -37,6 +67,8 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height) {
 		return false;
 	}
 	AdapterData adapter = AdapterReader::GetBestAdapter();
+	
+	
 	DXGI_SWAP_CHAIN_DESC scd;
 	ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
 
@@ -77,6 +109,10 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height) {
 		ErrorLogger::Log(hr, "Failed to create device and swapchain.");
 		return false;
 	}
+
+	UINT numLevels = 0;
+	hr = this->device->CheckMultisampleQualityLevels(DXGI_FORMAT_R8G8B8A8_UNORM, 1, &numLevels);
+
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
 	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf()));
 	if (FAILED(hr)) {
@@ -112,25 +148,46 @@ bool Graphics::InitializeShaders(std::wstring vertexShaderFile, std::wstring eff
 			0, // The byte offset
 			D3D11_INPUT_PER_VERTEX_DATA, // The input slot class
 			0 // The instance data step rate
-		}
+		}, 
+			{
+			"TEXCOORD", // The name of the element
+			0, // The index of the element
+			DXGI_FORMAT_R32G32_FLOAT, // The format of the element
+			0, // The input slot
+			D3D11_APPEND_ALIGNED_ELEMENT, // The byte offset
+			D3D11_INPUT_PER_VERTEX_DATA, // The input slot class
+			0 // The instance data step rate
+		},
+		// supply IRESOLUTION
+		{
+			"IRESOLUTION", // The name of the element
+			0, // The index of the element
+			DXGI_FORMAT_R32G32_FLOAT, // The format of the element
+			0, // The input slot
+			D3D11_APPEND_ALIGNED_ELEMENT, // The byte offset
+			D3D11_INPUT_PER_VERTEX_DATA, // The input slot class
+			0 // The instance data step rate
+}
 	};
 	if(!this->vertexShader.Initialize(this->device,vertexShaderFile, layout, ARRAYSIZE(layout)))
 		return false;
-	if(!this->effectShader.Initialize(this->device, effectShaderFile))
+	if(!this->effectShader.Initialize(this->device, this->context, effectShaderFile))
 		return false;
-	if(!this->postShader.Initialize(this->device, postShaderFile))
+	if(!this->postShader.Initialize(this->device, this->context, postShaderFile))
 		return false;
 	return true;
 }
 
-bool Graphics::InitializeScene()
+bool Graphics::InitializeScene(int width, int height)
 {
 	//full screen quad
+	float w = static_cast<float>(width);
+	float h = static_cast<float>(height);
 	Vertex quad[] = {
-		Vertex(-1.0f, -1.0f),
-		Vertex(-1.0f, 1.0f),
-		Vertex(1.0f, -1.0f),
-		Vertex(1.0f, 1.0f)
+		Vertex(-1.0f, -1.0f, 0.0f, 0.0f,w,h),
+		Vertex(-1.0f, 1.0f, 0.0f, h,w,h),
+		Vertex(1.0f, -1.0f, w, 0.f,w,h),
+		Vertex(1.0f, 1.0f, w, h,w,h)
 	};
 	D3D11_BUFFER_DESC vertexBufferDesc;
     ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -150,5 +207,39 @@ bool Graphics::InitializeScene()
 		return false;
 	}
 
+	return true;
+}
+
+bool Graphics::InitializeEffectTexture(int width, int height)
+{
+	D3D11_TEXTURE2D_DESC textureDesc;
+	ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = 0;
+
+	HRESULT hr = this->device->CreateTexture2D(&textureDesc, NULL, this->effectTexture.GetAddressOf());
+	if (FAILED(hr)) {
+		ErrorLogger::Log(hr, "Failed to create effect texture.");
+		return false;
+	}
+	hr = this->device->CreateRenderTargetView(this->effectTexture.Get(), NULL, this->effectRenderTargetView.GetAddressOf());
+	if (FAILED(hr)) {
+		ErrorLogger::Log(hr, "Failed to create effect render target view.");
+		return false;
+	}
+	hr = this->device->CreateShaderResourceView(this->effectTexture.Get(), NULL, this->effectShaderResourceView.GetAddressOf());
+	if (FAILED(hr)) {
+		ErrorLogger::Log(hr, "Failed to create effect shader resource view.");
+		return false;
+	}
 	return true;
 }

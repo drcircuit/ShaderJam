@@ -12,4 +12,7 @@ public:
 	bool ProcessMessage();
 	void Update();
 	void Draw();
+private:
+	bool recompileShaders = false;
+	ShaderFiles shaders;
 };

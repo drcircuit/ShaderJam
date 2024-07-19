@@ -52,7 +52,9 @@ bool VertexShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, std:
 		ErrorLogger::Log(hr, L"Unknown shader file extension: " + shaderpath);
 		return false;
 	}
-	
+	// cleanup
+	if (error_buffer) error_buffer->Release();
+
 	return true;
 }
 
@@ -69,9 +71,10 @@ ID3D11InputLayout* VertexShader::GetInputLayout()
 	return this->inputLayout.Get();
 }
 
-bool PixelShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, std::wstring shaderpath) {
+bool PixelShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device ,Microsoft::WRL::ComPtr<ID3D11DeviceContext>& context,  std::wstring shaderpath) {
 	HRESULT hr = D3DReadFileToBlob(shaderpath.c_str(), shader_buffer.GetAddressOf());
 	ID3D10Blob* error_buffer = nullptr;
+	this->context = context;
 	if (FAILED(hr)) {
 		ErrorLogger::Log(hr, L"Failed to load shader: " + shaderpath);
 		return false;
@@ -112,6 +115,19 @@ bool PixelShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, std::
 		ErrorLogger::Log(hr, L"Unknown shader file extension: " + shaderpath);
 		return false;
 	}
+
+	D3D11_BUFFER_DESC bufferDesc;
+	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.ByteWidth = sizeof(EffectData);
+	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferDesc.CPUAccessFlags = 0;
+	bufferDesc.MiscFlags = 0;
+	hr = device->CreateBuffer(&bufferDesc, NULL, this->dataBuffer.GetAddressOf());
+	if (FAILED(hr)) {
+		ErrorLogger::Log(hr, L"Failed to create data constant buffer.");
+		return false;
+	}
 	return true;
 }
 
@@ -121,4 +137,23 @@ ID3D11PixelShader* PixelShader::GetShader() {
 
 ID3D10Blob* PixelShader::GetBuffer() {
 	return this->shader_buffer.Get();
+}
+
+void PixelShader::SetTime(float time)
+{
+	this->data.time = time;
+}
+
+PixelShader::EffectData* PixelShader::GetDataPointer()
+{
+	return &this->data;
+}
+
+ID3D11Buffer* PixelShader::GetDataBuffer() {
+	return this->dataBuffer.Get();
+}
+
+void PixelShader::SetTextureResourceView(Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv)
+{
+	this->context->PSSetShaderResources(0, 1, srv.GetAddressOf());
 }
